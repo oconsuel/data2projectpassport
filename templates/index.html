@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Список проектов</h1>
+  <ul>
+    {% for p in projects %}
+      <li>
+        <a href="/projects/{{ p.id }}">{{ p.name }}</a>
+        — статус: {{ p.status }}
+      </li>
+    {% endfor %}
+  </ul>
+
+  <h2>Создать новый проект</h2>
+  <form method="post">
+    <input type="text" name="name" placeholder="Название проекта" required>
+    <button type="submit">Создать</button>
+  </form>
+{% endblock %}

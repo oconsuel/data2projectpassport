@@ -1,0 +1,15 @@
+numpy==2.2.4
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic
+python-docx
+python-pptx
+pymupdf
+Pillow
+spacy
+gensim
+scikit-learn
+rake-nltk
+yake
+nltk

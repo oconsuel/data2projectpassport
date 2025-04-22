@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Проект: {{ project.name }}</h1>
+  <p><strong>Статус:</strong> {{ project.status }}</p>
+
+  <h2>Загрузить документы</h2>
+  <form 
+    action="/projects/{{ project.id }}/upload" 
+    method="post" 
+    enctype="multipart/form-data"
+  >
+    <input type="file" name="files" multiple required>
+    <button type="submit">Загрузить</button>
+  </form>
+
+  <h2>Результаты анализа</h2>
+  {% if passport %}
+    <p><strong>Краткое описание:</strong><br>
+       {{ passport.summary_short }}</p>
+
+    <p><strong>Подробное описание:</strong><br>
+       {{ passport.summary_long | replace("\n", "<br/>") | safe }}</p>
+
+    <p><strong>Теги:</strong>
+       {{ passport.tags | safe }}
+    </p>
+
+    <h3>Извлечённые графические файлы:</h3>
+    <ul>
+      {% for f in project.files %}
+        {% if f.file_type.startswith("image/") %}
+          <li>
+            <a href="/uploads/{{ project.id }}/images/{{ f.filename }}">{{ f.filename }}</a>
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Ещё нет результатов анализа.</p>
+  {% endif %}
+
+  <p><a href="/">← Вернуться на главную</a></p>
+{% endblock %}
