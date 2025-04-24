@@ -11,3 +11,11 @@ class ProjectPassport(BaseModel):
 
     class Config:
         orm_mode = True
+
+class ProjectPassportSubfile(BaseModel):
+    filename: str
+    summary_short: str
+    summary_long: str
+    tags: List[str]
+    class Config:
+        orm_mode = True

@@ -54,7 +54,10 @@ def extract_from_docx(path, raw_lines, images_dir):
         txt = p.text.strip()
         if txt:
             lbl = docx_paragraph_label(p)
+            # добавляем сам текст
             raw_lines.append(markdown_from_label(lbl, txt))
+            # и пустую строку — чтобы downstream_парсинг видел границу абзаца
+            raw_lines.append("")
     for table in doc.tables:
         for row in table.rows:
             cells = [c.text.strip() for c in row.cells]

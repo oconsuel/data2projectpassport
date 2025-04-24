@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Project, ProjectFile, ProjectPassport
+from models import Project, ProjectFile, ProjectPassport, ProjectPassportSubfile
 import json
 
 def create_project(db: Session, name: str):
@@ -47,3 +47,23 @@ def save_passport(db: Session, project_id: int, summary_short: str, summary_long
 
 def get_passport(db: Session, project_id: int):
     return db.query(ProjectPassport).filter(ProjectPassport.project_id == project_id).first()
+
+def save_passport_subfile(db: Session, project_id: int, filename: str,
+                          summary_short: str, summary_long: str, tags: list):
+    tags_str = json.dumps(tags, ensure_ascii=False)
+    sub = ProjectPassportSubfile(
+        project_id=project_id,
+        filename=filename,
+        summary_short=summary_short,
+        summary_long=summary_long,
+        tags=tags_str
+    )
+    db.add(sub)
+    db.commit()
+    db.refresh(sub)
+    return sub
+
+def get_passport_subfiles(db: Session, project_id: int):
+    return (db.query(ProjectPassportSubfile)
+              .filter(ProjectPassportSubfile.project_id==project_id)
+              .all())

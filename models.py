@@ -11,6 +11,8 @@ class Project(Base):
     status = Column(String, default="pending")
     files = relationship("ProjectFile", back_populates="project")
     passport = relationship("ProjectPassport", uselist=False, back_populates="project")
+    subfiles = relationship("ProjectPassportSubfile", back_populates="project")
+
 
 class ProjectFile(Base):
     __tablename__ = "project_files"
@@ -29,3 +31,13 @@ class ProjectPassport(Base):
     summary_long = Column(Text)
     tags = Column(Text)  # JSON‑строка
     project = relationship("Project", back_populates="passport")
+
+class ProjectPassportSubfile(Base):
+    __tablename__ = "project_passport_subfiles"
+    id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.id"))
+    filename = Column(String)
+    summary_short = Column(Text)
+    summary_long  = Column(Text)
+    tags          = Column(Text)  # JSON-строка
+    project = relationship("Project", back_populates="subfiles")

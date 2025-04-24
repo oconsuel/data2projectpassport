@@ -5,7 +5,8 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 import os, shutil
 
-import crud, models, schemas, extraction, preprocessing, semantic_analysis, generation
+import crud, models, schemas, extraction, preprocessing, semantic_analysis
+from generation import generate_blocks
 from database import SessionLocal, engine
 
 # create tables
@@ -29,10 +30,7 @@ def get_db():
 @app.get("/", response_class=HTMLResponse)
 def project_list(request: Request, db: Session = Depends(get_db)):
     projects = db.query(models.Project).all()
-    return templates.TemplateResponse("index.html", {
-        "request": request,
-        "projects": projects
-    })
+    return templates.TemplateResponse("index.html", {"request": request, "projects": projects})
 
 @app.post("/", response_class=HTMLResponse)
 def create_project(request: Request, name: str = Form(...), db: Session = Depends(get_db)):
@@ -45,11 +43,7 @@ def project_detail(request: Request, project_id: int, db: Session = Depends(get_
     if not proj:
         raise HTTPException(404, "Project not found")
     passport = crud.get_passport(db, project_id)
-    return templates.TemplateResponse("project_detail.html", {
-        "request": request,
-        "project": proj,
-        "passport": passport
-    })
+    return templates.TemplateResponse("project_detail.html", {"request": request, "project": proj, "passport": passport})
 
 @app.post("/projects/{project_id}/upload", response_class=HTMLResponse)
 async def upload_files(
@@ -77,10 +71,16 @@ async def upload_files(
     text = extraction.extract_text_and_images(paths, project_dir)
     prep = preprocessing.preprocess(text)
     sem = semantic_analysis.semantic_analysis(prep)
-    short, long, tags = generation.generate_blocks(text, sem)
+
+    # generate blocks per file and select first
+    file_blocks = generate_blocks(text, sem)
+    first_name, first_blocks = file_blocks[0]
+    short = first_blocks["short"]
+    long_ = first_blocks["long"]
+    tags = first_blocks["tags"]
 
     # save passport and mark done
-    crud.save_passport(db, project_id, summary_short=short, summary_long=long, tags=tags)
+    crud.save_passport(db, project_id, summary_short=short, summary_long=long_, tags=tags)
     crud.update_status(db, project_id, status="done")
 
     return RedirectResponse(f"/projects/{project_id}", status_code=303)
