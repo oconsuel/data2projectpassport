@@ -5,7 +5,7 @@ conda create -n project3 python=3.12
 conda activate project3
 conda install gensim=4.3.3
 conda install numpy spacy scikit-learn pillow sqlalchemy
-pip install fastapi uvicorn pydantic python-docx python-pptx pymupdf rake-nltk yake nltk sumy python-multipart
+pip install fastapi uvicorn pydantic python-docx python-pptx pymupdf rake-nltk yake nltk sumy transformers torch python-multipart
 
 
 1. Создайте виртуальное окружение:
@@ -23,6 +23,8 @@ python -m spacy download ru_core_news_lg
 
 Инициализируйте данные NLTK (для RAKE‑NLP):
 python -c "import nltk; nltk.download('stopwords')"
+python -c "import nltk; nltk.download('punkt')"
+python -c "import nltk; nltk.download('punkt_tab')"
 
 Запуск
 uvicorn app:app --reload
