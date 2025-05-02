@@ -8,7 +8,7 @@ import fitz  # PyMuPDF
 from docx import Document
 from pptx import Presentation
 from PIL import Image
-
+from crud import save_file  # Импортируем save_file для добавления файлов в базу
 
 def docx_paragraph_label(p):
     style = p.style.name.lower() if p.style else ""
@@ -47,16 +47,15 @@ def markdown_from_label(label, txt: str):
     return txt
 
 
-def extract_from_docx(path, raw_lines, images_dir):
+def extract_from_docx(path, raw_lines, images_dir, project_id, db):
     doc = Document(path)
     raw_lines.append(f"---\n# {os.path.basename(path)}\n---")
+    extracted_images = []
     for p in doc.paragraphs:
         txt = p.text.strip()
         if txt:
             lbl = docx_paragraph_label(p)
-            # добавляем сам текст
             raw_lines.append(markdown_from_label(lbl, txt))
-            # и пустую строку — чтобы downstream_парсинг видел границу абзаца
             raw_lines.append("")
     for table in doc.tables:
         for row in table.rows:
@@ -68,11 +67,16 @@ def extract_from_docx(path, raw_lines, images_dir):
                 data = z.read(info.filename)
                 fn = f"{uuid.uuid4()}_{os.path.basename(info.filename)}"
                 open(os.path.join(images_dir, fn), "wb").write(data)
+                extracted_images.append(fn)
+                # Регистрируем извлеченный файл в базе
+                save_file(db, project_id, filename=fn, file_type="image/jpeg")
+    return extracted_images
 
 
-def extract_from_pptx(path, raw_lines, images_dir):
+def extract_from_pptx(path, raw_lines, images_dir, project_id, db):
     prs = Presentation(path)
     raw_lines.append(f"---\n# {os.path.basename(path)}\n---")
+    extracted_images = []
     for i, slide in enumerate(prs.slides, start=1):
         raw_lines.append(f"## Slide {i}")
         for shp in slide.shapes:
@@ -88,10 +92,15 @@ def extract_from_pptx(path, raw_lines, images_dir):
                 blob = shp.image.blob
                 fn = f"slide{i}_{uuid.uuid4()}.png"
                 Image.open(io.BytesIO(blob)).save(os.path.join(images_dir, fn))
+                extracted_images.append(fn)
+                # Регистрируем извлеченный файл в базе
+                save_file(db, project_id, filename=fn, file_type="image/png")
+    return extracted_images
 
 
-def extract_from_pdf(path, raw_lines, images_dir):
+def extract_from_pdf(path, raw_lines, images_dir, project_id, db):
     raw_lines.append(f"---\n# {os.path.basename(path)}\n---")
+    extracted_images = []
     doc = fitz.open(path)
     for i, page in enumerate(doc, start=1):
         txt = page.get_text().strip()
@@ -110,11 +119,15 @@ def extract_from_pdf(path, raw_lines, images_dir):
                 image = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
             fn = f"page{i}_img{idx}_{uuid.uuid4()}.png"
             image.save(os.path.join(images_dir, fn))
+            extracted_images.append(fn)
+            # Регистрируем извлеченный файл в базе
+            save_file(db, project_id, filename=fn, file_type="image/png")
             pix = None
     doc.close()
+    return extracted_images
 
 
-def extract_text_and_images(file_paths, project_dir):
+def extract_text_and_images(file_paths, project_dir, project_id, db):
     raw = []
     img_dir = os.path.join(project_dir, "images")
     os.makedirs(img_dir, exist_ok=True)
@@ -123,6 +136,6 @@ def extract_text_and_images(file_paths, project_dir):
         ext = os.path.splitext(p)[1].lower().lstrip('.')
         func = globals().get(f"extract_from_{ext}")
         if callable(func):
-            func(p, raw, img_dir)
+            func(p, raw, img_dir, project_id, db)
 
     return "\n".join(raw)

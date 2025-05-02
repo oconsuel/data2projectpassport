@@ -45,14 +45,21 @@ def save_passport(db: Session, project_id: int, summary_short: str, summary_long
     db.refresh(passport)
     return passport
 
+def save_poster_path(db: Session, project_id: int, poster_path: str):
+    proj = get_project(db, project_id)
+    if proj:
+        proj.poster_path = poster_path
+        db.commit()
+    return proj
+
 def get_passport(db: Session, project_id: int):
     return db.query(ProjectPassport).filter(ProjectPassport.project_id == project_id).first()
 
-def save_passport_subfile(db: Session, project_id: int, filename: str,
+def save_passport_subfile(db: Session, passport_id: int, filename: str,
                           summary_short: str, summary_long: str, tags: list):
     tags_str = json.dumps(tags, ensure_ascii=False)
     sub = ProjectPassportSubfile(
-        project_id=project_id,
+        passport_id=passport_id,  # Используем passport_id вместо project_id
         filename=filename,
         summary_short=summary_short,
         summary_long=summary_long,
@@ -63,9 +70,9 @@ def save_passport_subfile(db: Session, project_id: int, filename: str,
     db.refresh(sub)
     return sub
 
-def get_passport_subfiles(db: Session, project_id: int):
+def get_passport_subfiles(db: Session, passport_id: int):
     return (db.query(ProjectPassportSubfile)
-              .filter(ProjectPassportSubfile.project_id==project_id)
+              .filter(ProjectPassportSubfile.passport_id == passport_id)
               .all())
 
 def update_recommendations(db: Session, project_id: int, recommendations: str):

@@ -1,44 +1,50 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
 from database import Base
+import json
 
 class Project(Base):
     __tablename__ = "projects"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    status = Column(String, default="pending")
-    files = relationship("ProjectFile", back_populates="project")
-    passport = relationship("ProjectPassport", uselist=False, back_populates="project")
-    subfiles = relationship("ProjectPassportSubfile", back_populates="project")
-    recommendations = Column(Text, nullable=True)
 
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    status = Column(String, default="created")
+    recommendations = Column(String)
+    poster_path = Column(String)  # Путь к постеру
+
+    files = relationship("ProjectFile", back_populates="project")
+    passport = relationship("ProjectPassport", back_populates="project", uselist=False)
 
 class ProjectFile(Base):
     __tablename__ = "project_files"
+
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id"))
     filename = Column(String)
     file_type = Column(String)
-    uploaded_at = Column(DateTime, default=datetime.utcnow)
+
     project = relationship("Project", back_populates="files")
 
 class ProjectPassport(Base):
     __tablename__ = "project_passports"
+
     id = Column(Integer, primary_key=True, index=True)
     project_id = Column(Integer, ForeignKey("projects.id"))
-    summary_short = Column(Text)
-    summary_long = Column(Text)
-    tags = Column(Text)  # JSON‑строка
+    summary_short = Column(String)
+    summary_long = Column(String)
+    tags = Column(String)
+
     project = relationship("Project", back_populates="passport")
+    subfiles = relationship("ProjectPassportSubfile", back_populates="passport")
 
 class ProjectPassportSubfile(Base):
     __tablename__ = "project_passport_subfiles"
+
     id = Column(Integer, primary_key=True, index=True)
-    project_id = Column(Integer, ForeignKey("projects.id"))
+    passport_id = Column(Integer, ForeignKey("project_passports.id"))  # Связь с ProjectPassport
     filename = Column(String)
-    summary_short = Column(Text)
-    summary_long  = Column(Text)
-    tags          = Column(Text)  # JSON-строка
-    project = relationship("Project", back_populates="subfiles")
+    summary_short = Column(String)
+    summary_long = Column(String)
+    tags = Column(String)
+
+    passport = relationship("ProjectPassport", back_populates="subfiles")

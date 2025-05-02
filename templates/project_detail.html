@@ -14,86 +14,149 @@
     <button type="submit">Загрузить</button>
   </form>
 
-  <h2>Результаты анализа</h2>
-  {% if passport %}
-    <p>
-      <strong>Краткое описание:</strong>
-      <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Исходное краткое описание, полученное из анализа документов."></i><br>
-      {{ passport.summary_short }}
-    </p>
-
-    <p>
-      <strong>Подробное описание:</strong>
-      <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Исходное подробное описание, основанное на извлеченных данных."></i><br>
-    </p>
-    <p>#1 Цель<br>{{ passport.summary_long.split("### Задачи проекта")[0] | trim | replace("\n", "<br/>") | safe }}</p>
-    <p>#2 Задачи<br>{{ passport.summary_long.split("### Актуальность проекта")[0].split("### Задачи проекта")[1] | trim | replace("\n", "<br/>") | safe }}</p>
-    <p>#3 Актуальность<br>{{ passport.summary_long.split("### Ожидаемый результат")[0].split("### Актуальность проекта")[1] | trim | replace("\n", "<br/>") | safe }}</p>
-    <p>#4 Ожидаемый результат<br>{{ passport.summary_long.split("### Ожидаемый результат")[1] | trim | replace("\n", "<br/>") | safe }}</p>
-
-    <p><strong>Теги:</strong>
-      <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Теги, автоматически сгенерированные на основе содержания документов."></i>
-    </p>
-    <div>
-      {% for tag in tags %}
-        <span class="tag">{{ tag }}</span>
-      {% endfor %}
-    </div>
-
-    <h3>Извлечённые графические файлы:</h3>
-    <ul>
-      {% for f in project.files %}
-        {% if f.file_type.startswith("image/") %}
-          <li>
-            <a href="/uploads/{{ project.id }}/images/{{ f.filename }}">{{ f.filename }}</a>
-          </li>
-        {% endif %}
-      {% endfor %}
-    </ul>
-
-    <hr>
-    <h3>Рекомендации от ИИ:</h3>
-    <div id="recommendation-block">
-      {% if recommendations %}
+  <div class="project-container">
+    <div class="project-text">
+      <h2>Результаты анализа</h2>
+      {% if passport %}
         <p>
           <strong>Краткое описание:</strong>
-          <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="{{ recommendations.summary_short_reason }}"></i><br>
-          {{ recommendations.summary_short }}
+          <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Исходное краткое описание, полученное из анализа документов."></i><br>
+          {{ passport.summary_short }}
         </p>
 
         <p>
           <strong>Подробное описание:</strong>
-          <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="{{ recommendations.summary_long_reason }}"></i><br>
+          <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Исходное подробное описание, основанное на извлеченных данных."></i><br>
         </p>
-        <p>#1 Цель<br>{{ recommendations.summary_long.goal | replace("\n", "<br/>") | safe }}</p>
-        <p>#2 Задачи<br>{{ recommendations.summary_long.tasks | replace("\n", "<br/>") | safe }}</p>
-        <p>#3 Актуальность<br>{{ recommendations.summary_long.relevance | replace("\n", "<br/>") | safe }}</p>
-        <p>#4 Ожидаемый результат<br>{{ recommendations.summary_long.expected_result | replace("\n", "<br/>") | safe }}</p>
+        <p>#1 Цель<br>{{ passport.summary_long.split("### Задачи проекта")[0] | trim | replace("\n", "<br/>") | safe }}</p>
+        <p>#2 Задачи<br>{{ passport.summary_long.split("### Актуальность проекта")[0].split("### Задачи проекта")[1] | trim | replace("\n", "<br/>") | safe }}</p>
+        <p>#3 Актуальность<br>{{ passport.summary_long.split("### Ожидаемый результат")[0].split("### Актуальность проекта")[1] | trim | replace("\n", "<br/>") | safe }}</p>
+        <p>#4 Ожидаемый результат<br>{{ passport.summary_long.split("### Ожидаемый результат")[1] | trim | replace("\n", "<br/>") | safe }}</p>
 
         <p><strong>Теги:</strong>
-          <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="{{ recommendations.tags_reason }}"></i>
+          <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Теги, автоматически сгенерированные на основе содержания документов."></i>
         </p>
         <div>
-          {% for tag in recommendations.tags %}
+          {% for tag in tags %}
             <span class="tag">{{ tag }}</span>
           {% endfor %}
         </div>
+
+        <h3>Извлечённые графические файлы:</h3>
+        <ul>
+          {% for f in project.files %}
+            {% if f.file_type.startswith("image/") %}
+              <li>
+                <a href="/uploads/{{ project.id }}/images/{{ f.filename }}">{{ f.filename }}</a>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+
+        <hr>
+        <h3>Рекомендации от ИИ:</h3>
+        <div id="recommendation-block" data-project-id="{{ project.id }}">
+          {% if recommendations %}
+            <p>
+              <strong>Краткое описание:</strong>
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="{{ recommendations.summary_short_reason }}"></i><br>
+              {{ recommendations.summary_short }}
+            </p>
+
+            <p>
+              <strong>Подробное описание:</strong>
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="{{ recommendations.summary_long_reason }}"></i><br>
+            </p>
+            <p>#1 Цель<br>{{ recommendations.summary_long.goal | replace("\n", "<br/>") | safe }}</p>
+            <p>#2 Задачи<br>{{ recommendations.summary_long.tasks | replace("\n", "<br/>") | safe }}</p>
+            <p>#3 Актуальность<br>{{ recommendations.summary_long.relevance | replace("\n", "<br/>") | safe }}</p>
+            <p>#4 Ожидаемый результат<br>{{ recommendations.summary_long.expected_result | replace("\n", "<br/>") | safe }}</p>
+
+            <p><strong>Теги:</strong>
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="{{ recommendations.tags_reason }}"></i>
+            </p>
+            <div>
+              {% for tag in recommendations.tags %}
+                <span class="tag">{{ tag }}</span>
+              {% endfor %}
+            </div>
+            <button id="regenerate-recommend-btn" class="btn btn-outline-secondary mt-3" data-project-id="{{ project.id }}">
+                Повторить генерацию рекомендаций
+            </button>
+          {% else %}
+            <button id="recommend-btn"
+                    class="btn btn-outline-primary"
+                    data-project-id="{{ project.id }}">
+              Сгенерировать рекомендации
+            </button>
+            <p id="loading" class="text-muted mt-2">Рекомендации появятся здесь после генерации.</p>
+          {% endif %}
+        </div>
       {% else %}
-        <button id="recommend-btn"
-                class="btn btn-outline-primary"
-                data-project-id="{{ project.id }}">
-          Сгенерировать рекомендации
-        </button>
-        <p id="loading" class="text-muted mt-2">Рекомендации появятся здесь после генерации.</p>
+        <p>Ещё нет результатов анализа.</p>
       {% endif %}
     </div>
-  {% else %}
-    <p>Ещё нет результатов анализа.</p>
-  {% endif %}
+
+    <div class="project-poster">
+      <div class="poster-loader" id="poster-loader" style="display: {% if project.poster_path %}none{% else %}flex{% endif %};">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Загрузка...</span>
+        </div>
+        <p>Генерация постера...</p>
+      </div>
+      <img src="{% if project.poster_path %}/{{ project.poster_path }}{% else %}#{% endif %}" alt="Проектный постер" id="poster-image" style="display: {% if project.poster_path %}block{% else %}none{% endif %};">
+      <div id="poster-actions" style="margin-top: 10px; display: {% if project.poster_path %}block{% else %}none{% endif %};">
+        <button id="edit-poster-btn" class="btn btn-outline-secondary">Изменить постер</button>
+        <div id="edit-poster-form" style="display: none; margin-top: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="text" id="poster-comment" class="form-control" placeholder="Что вам не нравится в постере?" style="flex: 1;">
+            <button id="submit-comment-btn" class="btn btn-primary" style="padding: 5px 10px;">
+              <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="project-data" 
+         style="display: none;"
+         data-project-id="{{ project.id | tojson }}"
+         data-poster-path="{{ project.poster_path | tojson }}"
+         data-status="{{ project.status | tojson }}">
+    </div>
+  </div>
 
   <p><a href="/">← Вернуться на главную</a></p>
 
   <style>
+    .project-container {
+      display: flex;
+      gap: 20px;
+    }
+    .project-text {
+      flex: 2;
+    }
+    .project-poster {
+      flex: 1;
+      max-width: 400px;
+    }
+    .project-poster img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .poster-loader {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 300px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+    }
     .tag {
       display: inline-block;
       background-color: #e2e6ea;
@@ -108,67 +171,222 @@
       color: #007bff;
     }
   </style>
+{% endblock %}
 
+{% block scripts %}
+  {{ super() }}
   <script>
-    document.getElementById("recommend-btn")?.addEventListener("click", async function () {
-      const projectId = this.dataset.projectId;
-
-      this.disabled = true;
-      document.getElementById("loading").innerText = "Генерация...";
+    // Главная функция: делает fetch и перерисовывает блок
+    async function fetchAndRenderRecommendations(projectId) {
+      const block = document.getElementById("recommendation-block");
+      // Блокируем обе кнопки, если они есть
+      ["recommend-btn", "regenerate-recommend-btn"].forEach(id => {
+        document.getElementById(id)?.setAttribute("disabled", "");
+      });
+      block.querySelector("#loading")?.remove();
+      block.insertAdjacentHTML("beforeend",
+        `<p id="loading" class="text-muted mt-2">Генерация...</p>`
+      );
 
       try {
-        const response = await fetch(`/recommend/${projectId}`, {
-          method: "POST"
-        });
-
-        if (!response.ok) {
-          throw new Error(`Ошибка сервера: ${response.status}`);
-        }
-
-        const data = await response.json();
-
+        const resp = await fetch(`/recommend/${projectId}`, { method: "POST" });
+        if (!resp.ok) throw new Error(`Сервер вернул ${resp.status}`);
+        const data = await resp.json();
+        console.log("Полученные рекомендации:", data); // Для отладки
         if (data.error) {
-          document.getElementById("recommendation-block").innerHTML = `
+          block.innerHTML = `
             <p class="text-danger">${data.error}</p>
+            <button id="recommend-btn" class="btn btn-outline-primary" data-project-id="${projectId}">
+              Повторить
+            </button>
           `;
         } else {
-          document.getElementById("recommendation-block").innerHTML = `
+          const rec = data.recommendations;
+          // Безопасная функция для обработки не-строковых значений
+          const safeReplace = (text) => (typeof text === 'string' ? text.replace(/\n/g, '<br/>') : String(text || ''));
+          block.innerHTML = `
             <p>
               <strong>Краткое описание:</strong>
-              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="${data.recommendations.summary_short_reason}"></i><br>
-              ${data.recommendations.summary_short}
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="${rec.summary_short_reason}"></i><br>
+              ${rec.summary_short}
             </p>
             <p>
               <strong>Подробное описание:</strong>
-              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="${data.recommendations.summary_long_reason}"></i><br>
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="${rec.summary_long_reason}"></i><br>
             </p>
-            <p>#1 Цель<br>${data.recommendations.summary_long.goal.replace(/\n/g, '<br/>')}</p>
-            <p>#2 Задачи<br>${data.recommendations.summary_long.tasks.replace(/\n/g, '<br/>')}</p>
-            <p>#3 Актуальность<br>${data.recommendations.summary_long.relevance.replace(/\n/g, '<br/>')}</p>
-            <p>#4 Ожидаемый результат<br>${data.recommendations.summary_long.expected_result.replace(/\n/g, '<br/>')}</p>
+            <p>#1 Цель<br>${safeReplace(rec.summary_long.goal)}</p>
+            <p>#2 Задачи<br>${safeReplace(rec.summary_long.tasks)}</p>
+            <p>#3 Актуальность<br>${safeReplace(rec.summary_long.relevance)}</p>
+            <p>#4 Ожидаемый результат<br>${safeReplace(rec.summary_long.expected_result)}</p>
             <p><strong>Теги:</strong>
-              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="${data.recommendations.tags_reason}"></i>
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="${rec.tags_reason}"></i>
             </p>
             <div>
-              ${data.recommendations.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+              ${rec.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
             </div>
+            <button id="regenerate-recommend-btn"
+                    class="btn btn-outline-secondary mt-3">
+              Повторить генерацию рекомендаций
+            </button>
           `;
-          // Re-initialize tooltips after updating DOM
-          document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(element => {
-            new bootstrap.Tooltip(element);
-          });
+        }
+      } catch (err) {
+        block.innerHTML = `
+          <p class="text-danger">Ошибка при генерации рекомендаций: ${err.message}</p>
+          <button id="regenerate-recommend-btn"
+                  class="btn btn-outline-secondary mt-3">
+            Повторить генерацию рекомендаций
+          </button>
+        `;
+      } finally {
+        // Для Bootstrap-тултипов
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+        attachRecommendListeners();
+      }
+    }
+
+    // Навешиваем клики на кнопки
+    function attachRecommendListeners() {
+      const projectId = document
+        .getElementById("recommendation-block")
+        .dataset.projectId;
+      document.getElementById("recommend-btn")
+              ?.addEventListener("click", () => fetchAndRenderRecommendations(projectId));
+      document.getElementById("regenerate-recommend-btn")
+              ?.addEventListener("click", () => fetchAndRenderRecommendations(projectId));
+    }
+
+    // Логика для постера
+    async function checkPosterStatus(projectId, maxAttempts = 10, attempt = 1) {
+      console.log(`Checking poster status for project ${projectId}, attempt ${attempt}/${maxAttempts}`);
+
+      if (attempt > maxAttempts) {
+        console.error('Exceeded maximum attempts for checking poster status');
+        const loader = document.getElementById('poster-loader');
+        if (loader) {
+          loader.innerHTML = '<p class="text-danger">Ошибка загрузки постера. Попробуйте обновить страницу.</p>';
+        }
+        return;
+      }
+
+      try {
+        console.log(`Fetching /poster-status/${projectId}`);
+        const response = await fetch(`/poster-status/${projectId}`);
+        console.log(`Response status: ${response.status}`);
+
+        if (!response.ok) {
+          throw new Error(`Poster status check failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Poster status response:", data);
+
+        if (data.poster_path) {
+          console.log("Poster path received:", data.poster_path);
+          const loader = document.getElementById('poster-loader');
+          const image = document.getElementById('poster-image');
+          const actions = document.getElementById('poster-actions');
+          if (loader && image && actions) {
+            loader.style.display = 'none';
+            image.src = `/${data.poster_path}`;
+            image.style.display = 'block';
+            actions.style.display = 'block';
+          }
+        } else {
+          console.log("Poster not ready yet, retrying...");
+          setTimeout(() => checkPosterStatus(projectId, maxAttempts, attempt + 1), 2000);
         }
       } catch (error) {
-        document.getElementById("recommendation-block").innerHTML = `
-          <p class="text-danger">Ошибка при генерации рекомендаций: ${error.message}</p>
-        `;
+        console.error('Error checking poster status:', error);
+        setTimeout(() => checkPosterStatus(projectId, maxAttempts, attempt + 1), 2000);
       }
-    });
+    }
 
-    // Initialize tooltips on page load
     document.addEventListener('DOMContentLoaded', () => {
+      console.log("DOMContentLoaded triggered");
+
+      // Инициализация тултипов
       document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(element => {
         new bootstrap.Tooltip(element);
+      });
+
+      // Инициализация обработчиков для рекомендаций
+      attachRecommendListeners();
+
+      // Логика для постера
+      const projectData = document.getElementById('project-data');
+      if (!projectData) {
+        console.error("project-data element not found");
+        return;
+      }
+
+      const projectId = parseInt(projectData.dataset.projectId, 10);
+      const posterPath = projectData.dataset.posterPath === "null" ? null : projectData.dataset.posterPath;
+      const projectStatus = projectData.dataset.status;
+
+      console.log("Project ID:", projectId, "Poster Path:", posterPath, "Status:", projectStatus);
+
+      if (projectStatus === "done") {
+        console.log("Starting poster status check...");
+        checkPosterStatus(projectId, 10);
+      } else {
+        console.log("Project status is not 'done', skipping poster check");
+      }
+
+      // Логика для кнопки "Изменить постер"
+      const editPosterBtn = document.getElementById('edit-poster-btn');
+      const editPosterForm = document.getElementById('edit-poster-form');
+      const submitCommentBtn = document.getElementById('submit-comment-btn');
+      const posterCommentInput = document.getElementById('poster-comment');
+
+      editPosterBtn?.addEventListener('click', () => {
+        editPosterBtn.style.display = 'none';
+        editPosterForm.style.display = 'block';
+        posterCommentInput.focus();
+      });
+
+      submitCommentBtn?.addEventListener('click', async () => {
+        const comment = posterCommentInput.value.trim();
+        if (!comment) {
+          alert('Пожалуйста, введите комментарий.');
+          return;
+        }
+
+        // Показываем лоадер и скрываем форму
+        const loader = document.getElementById('poster-loader');
+        const image = document.getElementById('poster-image');
+        const actions = document.getElementById('poster-actions');
+        if (loader && image && actions) {
+          loader.style.display = 'flex';
+          image.style.display = 'none';
+          actions.style.display = 'none';
+        }
+
+        try {
+          // Отправляем комментарий на сервер
+          const response = await fetch(`/regenerate-poster/${projectId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ comment }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Ошибка сервера: ${response.status}`);
+          }
+
+          const data = await response.json();
+          if (data.error) {
+            throw new Error(data.error);
+          }
+
+          // Запускаем проверку статуса нового постера
+          checkPosterStatus(projectId, 10);
+        } catch (error) {
+          console.error('Ошибка при генерации нового постера:', error);
+          loader.innerHTML = `<p class="text-danger">Ошибка: ${error.message}</p>`;
+        }
       });
     });
   </script>
