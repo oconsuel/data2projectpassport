@@ -3,11 +3,15 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-import os, shutil
+import os, shutil, json
 
 import crud, models, schemas, extraction, preprocessing, semantic_analysis
 from generation import generate_blocks
 from database import SessionLocal, engine
+
+from models import Project, ProjectPassport
+from llm_module import generate_recommendations
+from crud import update_recommendations
 
 # create tables
 models.Base.metadata.create_all(bind=engine)
@@ -43,7 +47,20 @@ def project_detail(request: Request, project_id: int, db: Session = Depends(get_
     if not proj:
         raise HTTPException(404, "Project not found")
     passport = crud.get_passport(db, project_id)
-    return templates.TemplateResponse("project_detail.html", {"request": request, "project": proj, "passport": passport})
+    # Parse tags for the template
+    tags = json.loads(passport.tags) if passport and passport.tags else []
+    # Parse recommendations if they exist
+    recommendations = json.loads(proj.recommendations) if proj.recommendations else None
+    return templates.TemplateResponse(
+        "project_detail.html",
+        {
+            "request": request,
+            "project": proj,
+            "passport": passport,
+            "tags": tags,
+            "recommendations": recommendations
+        }
+    )
 
 @app.post("/projects/{project_id}/upload", response_class=HTMLResponse)
 async def upload_files(
@@ -84,3 +101,28 @@ async def upload_files(
     crud.update_status(db, project_id, status="done")
 
     return RedirectResponse(f"/projects/{project_id}", status_code=303)
+
+@app.post("/recommend/{project_id}")
+async def generate_llm_recommendations(project_id: int, request: Request, db: Session = Depends(get_db)):
+    project = db.query(Project).filter(Project.id == project_id).first()
+
+    if not project:
+        return {"error": "Проект не найден"}
+
+    # Получаем passport для проекта
+    passport = db.query(ProjectPassport).filter(ProjectPassport.project_id == project_id).first()
+    
+    # Используем summary_short из passport, если он существует
+    summary = passport.summary_short if passport and passport.summary_short else ""
+    # Теги хранятся в формате JSON, нужно их распарсить
+    tags = json.loads(passport.tags) if passport and passport.tags else []
+
+    recommendations = generate_recommendations(summary, tags)
+
+    if "error" in recommendations:
+        return {"error": recommendations["error"]}
+
+    # Сохраняем рекомендации как JSON-строку
+    update_recommendations(db, project_id, json.dumps(recommendations, ensure_ascii=False))
+
+    return {"recommendations": recommendations}

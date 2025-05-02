@@ -16,15 +16,29 @@
 
   <h2>Результаты анализа</h2>
   {% if passport %}
-    <p><strong>Краткое описание:</strong><br>
-       {{ passport.summary_short }}</p>
+    <p>
+      <strong>Краткое описание:</strong>
+      <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Исходное краткое описание, полученное из анализа документов."></i><br>
+      {{ passport.summary_short }}
+    </p>
 
-    <p><strong>Подробное описание:</strong><br>
-       {{ passport.summary_long | replace("\n", "<br/>") | safe }}</p>
+    <p>
+      <strong>Подробное описание:</strong>
+      <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Исходное подробное описание, основанное на извлеченных данных."></i><br>
+    </p>
+    <p>#1 Цель<br>{{ passport.summary_long.split("### Задачи проекта")[0] | trim | replace("\n", "<br/>") | safe }}</p>
+    <p>#2 Задачи<br>{{ passport.summary_long.split("### Актуальность проекта")[0].split("### Задачи проекта")[1] | trim | replace("\n", "<br/>") | safe }}</p>
+    <p>#3 Актуальность<br>{{ passport.summary_long.split("### Ожидаемый результат")[0].split("### Актуальность проекта")[1] | trim | replace("\n", "<br/>") | safe }}</p>
+    <p>#4 Ожидаемый результат<br>{{ passport.summary_long.split("### Ожидаемый результат")[1] | trim | replace("\n", "<br/>") | safe }}</p>
 
     <p><strong>Теги:</strong>
-       {{ passport.tags | safe }}
+      <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Теги, автоматически сгенерированные на основе содержания документов."></i>
     </p>
+    <div>
+      {% for tag in tags %}
+        <span class="tag">{{ tag }}</span>
+      {% endfor %}
+    </div>
 
     <h3>Извлечённые графические файлы:</h3>
     <ul>
@@ -36,9 +50,126 @@
         {% endif %}
       {% endfor %}
     </ul>
+
+    <hr>
+    <h3>Рекомендации от ИИ:</h3>
+    <div id="recommendation-block">
+      {% if recommendations %}
+        <p>
+          <strong>Краткое описание:</strong>
+          <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="{{ recommendations.summary_short_reason }}"></i><br>
+          {{ recommendations.summary_short }}
+        </p>
+
+        <p>
+          <strong>Подробное описание:</strong>
+          <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="{{ recommendations.summary_long_reason }}"></i><br>
+        </p>
+        <p>#1 Цель<br>{{ recommendations.summary_long.goal | replace("\n", "<br/>") | safe }}</p>
+        <p>#2 Задачи<br>{{ recommendations.summary_long.tasks | replace("\n", "<br/>") | safe }}</p>
+        <p>#3 Актуальность<br>{{ recommendations.summary_long.relevance | replace("\n", "<br/>") | safe }}</p>
+        <p>#4 Ожидаемый результат<br>{{ recommendations.summary_long.expected_result | replace("\n", "<br/>") | safe }}</p>
+
+        <p><strong>Теги:</strong>
+          <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="{{ recommendations.tags_reason }}"></i>
+        </p>
+        <div>
+          {% for tag in recommendations.tags %}
+            <span class="tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      {% else %}
+        <button id="recommend-btn"
+                class="btn btn-outline-primary"
+                data-project-id="{{ project.id }}">
+          Сгенерировать рекомендации
+        </button>
+        <p id="loading" class="text-muted mt-2">Рекомендации появятся здесь после генерации.</p>
+      {% endif %}
+    </div>
   {% else %}
     <p>Ещё нет результатов анализа.</p>
   {% endif %}
 
   <p><a href="/">← Вернуться на главную</a></p>
+
+  <style>
+    .tag {
+      display: inline-block;
+      background-color: #e2e6ea;
+      color: #333;
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin: 2px;
+    }
+    .bi-info-circle {
+      cursor: pointer;
+      margin-left: 5px;
+      color: #007bff;
+    }
+  </style>
+
+  <script>
+    document.getElementById("recommend-btn")?.addEventListener("click", async function () {
+      const projectId = this.dataset.projectId;
+
+      this.disabled = true;
+      document.getElementById("loading").innerText = "Генерация...";
+
+      try {
+        const response = await fetch(`/recommend/${projectId}`, {
+          method: "POST"
+        });
+
+        if (!response.ok) {
+          throw new Error(`Ошибка сервера: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          document.getElementById("recommendation-block").innerHTML = `
+            <p class="text-danger">${data.error}</p>
+          `;
+        } else {
+          document.getElementById("recommendation-block").innerHTML = `
+            <p>
+              <strong>Краткое описание:</strong>
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="${data.recommendations.summary_short_reason}"></i><br>
+              ${data.recommendations.summary_short}
+            </p>
+            <p>
+              <strong>Подробное описание:</strong>
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="${data.recommendations.summary_long_reason}"></i><br>
+            </p>
+            <p>#1 Цель<br>${data.recommendations.summary_long.goal.replace(/\n/g, '<br/>')}</p>
+            <p>#2 Задачи<br>${data.recommendations.summary_long.tasks.replace(/\n/g, '<br/>')}</p>
+            <p>#3 Актуальность<br>${data.recommendations.summary_long.relevance.replace(/\n/g, '<br/>')}</p>
+            <p>#4 Ожидаемый результат<br>${data.recommendations.summary_long.expected_result.replace(/\n/g, '<br/>')}</p>
+            <p><strong>Теги:</strong>
+              <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="${data.recommendations.tags_reason}"></i>
+            </p>
+            <div>
+              ${data.recommendations.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+            </div>
+          `;
+          // Re-initialize tooltips after updating DOM
+          document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(element => {
+            new bootstrap.Tooltip(element);
+          });
+        }
+      } catch (error) {
+        document.getElementById("recommendation-block").innerHTML = `
+          <p class="text-danger">Ошибка при генерации рекомендаций: ${error.message}</p>
+        `;
+      }
+    });
+
+    // Initialize tooltips on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(element => {
+        new bootstrap.Tooltip(element);
+      });
+    });
+  </script>
 {% endblock %}

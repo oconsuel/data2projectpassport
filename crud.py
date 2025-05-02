@@ -67,3 +67,9 @@ def get_passport_subfiles(db: Session, project_id: int):
     return (db.query(ProjectPassportSubfile)
               .filter(ProjectPassportSubfile.project_id==project_id)
               .all())
+
+def update_recommendations(db: Session, project_id: int, recommendations: str):
+    project = db.query(Project).filter(Project.id == project_id).first()
+    if project:
+        project.recommendations = recommendations
+        db.commit()

@@ -5,7 +5,7 @@ conda create -n project3 python=3.12
 conda activate project3
 conda install gensim=4.3.3
 conda install numpy spacy scikit-learn pillow sqlalchemy
-pip install fastapi uvicorn pydantic python-docx python-pptx pymupdf rake-nltk yake nltk sumy transformers torch python-multipart
+pip install fastapi uvicorn pydantic python-docx python-pptx pymupdf rake-nltk yake nltk sumy transformers torch python-multipart dotenv
 
 
 1. Создайте виртуальное окружение:

@@ -12,6 +12,7 @@ class Project(Base):
     files = relationship("ProjectFile", back_populates="project")
     passport = relationship("ProjectPassport", uselist=False, back_populates="project")
     subfiles = relationship("ProjectPassportSubfile", back_populates="project")
+    recommendations = Column(Text, nullable=True)
 
 
 class ProjectFile(Base):
