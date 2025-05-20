@@ -13,8 +13,12 @@ from database import SessionLocal, engine
 from fusionbrain import generate_project_poster
 
 from models import Project, ProjectPassport
-from llm_module import generate_recommendations, generate_poster_prompt
+from llm_module import generate_recommendations, generate_poster_prompt_from_params
 from crud import update_recommendations
+
+from dialog_graph import DIALOG_GRAPH
+from assemble_poster_prompt import assemble_poster_params
+
 
 # create tables
 models.Base.metadata.create_all(bind=engine)
@@ -22,6 +26,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
@@ -68,7 +73,8 @@ def project_detail(request: Request, project_id: int, db: Session = Depends(get_
             "passport": passport,
             "tags": tags,
             "recommendations": recommendations,
-            "poster_loading": False
+            "poster_loading": False,
+            "dialog_graph": DIALOG_GRAPH
         }
     )
 
@@ -173,3 +179,26 @@ async def regenerate_poster(project_id: int, request: Request, db: Session = Dep
     asyncio.create_task(generate_poster_async(project_id, new_prompt_text, new_tags, db))
 
     return JSONResponse({"status": "Генерация нового постера запущена"})
+
+@app.post("/projects/{project_id}/poster-dialog")
+async def poster_dialog(project_id: int, request: Request, db: Session = Depends(get_db)):
+    user_answers = await request.json()
+    proj = crud.get_project(db, project_id)
+    passport = crud.get_passport(db, project_id)
+    project_dict = {
+        "name": proj.name if proj else "",
+        "summary_short": passport.summary_short if passport and passport.summary_short else "",
+        "tags": json.loads(passport.tags) if passport and passport.tags else []
+    }
+    # 1. Собрать параметры для LLM
+    params = assemble_poster_params(user_answers, project_dict)
+    # 2. Получить prompt через Deepseek
+    llm_result = generate_poster_prompt_from_params(params)
+    if "error" in llm_result:
+        return JSONResponse(status_code=500, content={"error": llm_result["error"]})
+    prompt = llm_result["prompt"]
+    # 3. Передать prompt генератору постера
+    poster_path = generate_project_poster(prompt, project_dict["tags"], project_id)
+    crud.save_poster_path(db, project_id, poster_path)
+    return {"poster_path": poster_path}
+

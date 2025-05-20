@@ -40,6 +40,9 @@ class FusionBrainAPI:
         }
         response = requests.post(self.URL + 'key/api/v1/pipeline/run', headers=self.AUTH_HEADERS, files=data)
         data = response.json()
+        print("PROMPT:", prompt)
+        print("Fusionbrain API RESPONSE:", data)
+        print("Fusionbrain API ответ:", data)
         return data['uuid']
 
     def check_generation(self, request_id, attempts=10, delay=10):

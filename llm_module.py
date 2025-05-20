@@ -94,22 +94,23 @@ def generate_recommendations(summary_text: str, tags: list[str]) -> dict:
         print(f"Ошибка соединения: {e}")
         return {"error": f"Ошибка соединения: {e}"}
 
-def generate_poster_prompt(summary: str, tags: list[str], user_comment: str) -> dict:
-    """Генерирует новый промпт для постера на основе комментария пользователя."""
+def generate_poster_prompt_from_params(params: dict) -> dict:
+    """
+    Генерирует prompt для постера через Deepseek/OpenRouter на основе всех выбранных параметров wizard-а.
+    """
     if not OPENROUTER_API_KEY:
         return {"error": "Генерация отключена: отсутствует ключ API."}
 
     prompt = (
-        f"Текущий постер создан на основе описания: '{summary}' и тегов: {', '.join(tags)}. "
-        f"Пользователь оставил комментарий о том, что ему не нравится: '{user_comment}'. "
-        f"Сгенерируй новый промпт для создания постера в формате JSON. "
-        f"Ответ должен быть чистым JSON-объектом, начинающимся с '{' и заканчивающимся '}', без префиксов или суффиксов. "
-        f"Структура JSON должна включать следующие поля:\n"
-        f"- prompt: текстовый промпт для генерации постера (максимум 200 символов, без Markdown).\n"
-        f"- reason: причина изменений в промпте, основанная на комментарии пользователя.\n"
-        f"Избегай использования Markdown (например, ###, -, *). Текст должен быть чистым, без лишних символов. "
-        f"Пример JSON:\n"
-        f'{{"prompt": "Модерный постер с мягкими цветами", "reason": "Пользователь указал, что яркие цвета не подходят"}}'
+        "Сгенерируй короткий, лаконичный prompt на английском для генератора изображений Kandinsky по следующим параметрам:\n"
+    )
+    for k, v in params.items():
+        prompt += f"- {k}: {v}\n"
+    prompt += (
+        'Если выбран параметр "Без текста", обязательно явно укажи в prompt: "no text, no letters, no words, no typography". '
+        'Не включай в prompt описание проекта, если пользователь просит убрать текст. '
+        'Prompt должен быть понятен Kandinsky, без личных обращений, только перечисление нужных деталей. '
+        'Ответ только в формате JSON: {"prompt": "...", "reason": "..."}'
     )
 
     headers = {
@@ -120,46 +121,32 @@ def generate_poster_prompt(summary: str, tags: list[str], user_comment: str) -> 
     data = {
         "model": MODEL,
         "messages": [
-            {"role": "system", "content": "Ты — эксперт в дизайне и генерации изображений. Отвечай только в формате чистого JSON-объекта без текста вне JSON."},
+            {"role": "system", "content": "Ты — эксперт в генерации промптов для изображений. Отвечай только в формате чистого JSON-объекта без текста вне JSON."},
             {"role": "user", "content": prompt}
         ],
-        "stream": False
+        "stream": False,
+        "max_tokens": 2500
     }
 
     try:
-        with requests.post(OPENROUTER_API_URL, headers=headers, json=data, stream=True) as response:
-            if response.status_code != 200:
-                return {"error": f"Ошибка API: {response.status_code} - {response.text}"}
+        response = requests.post(OPENROUTER_API_URL, headers=headers, json=data)
+        if response.status_code != 200:
+            return {"error": f"Ошибка API: {response.status_code} - {response.text}"}
 
-            full_response = []
-            for chunk in response.iter_lines():
-                if chunk:
-                    chunk_str = chunk.decode('utf-8').replace('data: ', '')
-                    try:
-                        chunk_json = json.loads(chunk_str)
-                        if "choices" in chunk_json:
-                            content = chunk_json["choices"][0]["delta"].get("content", "")
-                            if content:
-                                cleaned = process_content(content)
-                                full_response.append(cleaned)
-                                print(f"Chunk: {cleaned}")  # Отладочный вывод
-                    except json.JSONDecodeError:
-                        print(f"Invalid chunk: {chunk_str}")  # Отладка невалидных фрагментов
+        resp_json = response.json()
+        content = resp_json["choices"][0]["message"]["content"].strip()
+        print("ОТВЕТ ОТ LLM:", content)
 
-            response_text = ''.join(full_response).strip()
-            print(f"Raw response: {response_text}")  # Отладка полного ответа
-            try:
-                import re
-                json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
-                if json_match:
-                    result = json.loads(json_match.group())
-                    # Убедимся, что prompt не превышает 200 символов
-                    if len(result.get("prompt", "")) > 200:
-                        result["prompt"] = result["prompt"][:197] + "..."
-                    return result
-                return {"error": "Не удалось найти валидный JSON в ответе API."}
-            except json.JSONDecodeError as e:
-                return {"error": f"Не удалось разобрать ответ API в JSON: {e}"}
-
+        # Удаляем markdown-обертку (```) если есть
+        import re
+        # Эта регулярка достает JSON внутри блока ```json ... ```
+        json_match = re.search(r'```json\s*(\{.*?\})\s*```', content, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group(1))
+        # Или просто ищем JSON-объект, если без markdown
+        json_match = re.search(r'(\{.*\})', content, re.DOTALL)
+        if json_match:
+            return json.loads(json_match.group(1))
+        return {"error": "Не удалось найти валидный JSON в ответе LLM."}
     except Exception as e:
         return {"error": f"Ошибка соединения: {e}"}
