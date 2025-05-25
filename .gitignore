@@ -44,3 +44,11 @@ Thumbs.db
 
 alembic/
 alembic.ini
+
+# Игнорировать все файлы во вложенных папках test_files, кроме .gitkeep в каждой из них
+pytests/test_files/**/*
+!pytests/test_files/**/.gitkeep
+
+# Игнорировать все файлы в tests, кроме .gitkeep
+pytests/tests/*
+!pytests/tests/.gitkeep

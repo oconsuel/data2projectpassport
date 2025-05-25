@@ -8,7 +8,7 @@ import asyncio
 import time
 
 import crud, models, schemas, extraction, preprocessing, semantic_analysis
-from generation import generate_blocks
+from generation import generate_blocks 
 from database import SessionLocal, engine
 from fusionbrain import generate_project_poster
 
@@ -18,6 +18,7 @@ from crud import update_recommendations
 
 from dialog_graph import DIALOG_GRAPH
 from assemble_poster_prompt import assemble_poster_params
+from generation.pdf_generator import generate_pdf
 
 
 # create tables
@@ -99,26 +100,35 @@ async def upload_files(
         crud.save_file(db, project_id, filename=uf.filename, file_type=uf.content_type)
         paths.append(dest)
 
-    text = extraction.extract_text_and_images(paths, project_dir, project_id, db)
-    prep = preprocessing.preprocess(text)
-    sem = semantic_analysis.semantic_analysis(prep)
+    # Логика для нескольких файлов и разных форматов
+    all_file_blocks = []
+    for path in paths:
+        ext = os.path.splitext(path)[1].lower()
+        if ext == ".pdf":
+            sem = None  # или что требуется в вашем generate_pdf
+            blocks = generate_pdf(path, sem)
+            # blocks обычно dict {"short": ..., "long": ..., "tags": ...}
+            first_name = os.path.basename(path)
+            first_blocks = blocks
+        else:
+            text = extraction.extract_text_and_images([path], project_dir, project_id, db)
+            prep = preprocessing.preprocess(text)
+            sem = semantic_analysis.semantic_analysis(prep)
+            file_blocks = generate_blocks(text, sem)
+            first_name, first_blocks = file_blocks[0]
+        short = first_blocks.get("short", "")
+        long_ = first_blocks.get("long", "")
+        tags = first_blocks.get("tags", [])
 
-    file_blocks = generate_blocks(text, sem)
-    first_name, first_blocks = file_blocks[0]
-    short = first_blocks["short"]
-    long_ = first_blocks["long"]
-    tags = first_blocks["tags"]
+        passport = crud.save_passport(db, project_id, summary_short=short, summary_long=long_, tags=tags)
+        crud.save_passport_subfile(db, passport_id=passport.id, filename=first_name,
+                                   summary_short=short, summary_long=long_, tags=tags)
 
-    passport = crud.save_passport(db, project_id, summary_short=short, summary_long=long_, tags=tags)
-
-    crud.save_passport_subfile(db, passport_id=passport.id, filename=first_name,
-                               summary_short=short, summary_long=long_, tags=tags)
-
+    # Можно оставить асинхронную генерацию постера для первого файла:
     asyncio.create_task(generate_poster_async(project_id, short, tags, db))
-
     crud.update_status(db, project_id, status="done")
-
     return RedirectResponse(f"/projects/{project_id}", status_code=303)
+
 
 @app.post("/recommend/{project_id}")
 async def generate_llm_recommendations(project_id: int, request: Request, db: Session = Depends(get_db)):

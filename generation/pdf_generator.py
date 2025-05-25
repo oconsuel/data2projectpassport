@@ -109,6 +109,6 @@ def generate_pdf(path: str, semantic: dict) -> dict:
         long_parts.append(f"### {title}\n{summary.strip()}")
 
     blocks['long'] = "\n\n".join(long_parts) or "Подробное описание отсутствует."
-    blocks['tags'] = semantic.get("keywords", [])
+    blocks['tags'] = semantic.get("keywords", []) if semantic else []
 
     return blocks

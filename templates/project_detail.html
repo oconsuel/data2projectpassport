@@ -49,7 +49,7 @@
 				<h3>Извлечённые графические файлы:</h3>
 				<ul>
 					{% for f in project.files %}
-						{% if f.file_type.startswith("image/") %}
+    					{% if f.file_type and f.file_type.startswith("image/") %}
 							<li>
 								<a href="/uploads/{{ project.id }}/images/{{ f.filename }}">{{ f.filename }}</a>
 							</li>

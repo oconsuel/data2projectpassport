@@ -18,7 +18,7 @@ def generate_blocks(raw_text: str, semantic: dict):
         elif ext == 'pptx':
             blocks = generate_pptx(section, semantic)
         elif ext == 'pdf':
-            blocks = generate_pdf(section, semantic)
+            blocks = generate_pdf(fname, semantic)
         else:
             continue
         results.append((fname, blocks))
