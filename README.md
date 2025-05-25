@@ -7,6 +7,8 @@ conda install gensim=4.3.3
 conda install numpy spacy scikit-learn pillow sqlalchemy
 pip install fastapi uvicorn pydantic python-docx python-pptx pymupdf rake-nltk yake nltk sumy transformers torch python-multipart dotenv, pytesseract
 
+Проверьте установку tessteract https://github.com/tesseract-ocr/tesseract 
+Проверьте установку модели для распознавания русского языка rus.traineddata https://github.com/tesseract-ocr/tessdata/blob/main/rus.traineddata
 
 1. Создайте виртуальное окружение:
    ```bash
