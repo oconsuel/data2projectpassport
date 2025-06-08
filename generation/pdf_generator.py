@@ -96,6 +96,12 @@ def generate_pdf(path: str, semantic: dict) -> dict:
             block = matches[0] if matches else None
         if not block:
             continue
+        # Remove nested headings to avoid duplicated titles
+        block = re.sub(
+            r"(?m)^#+\s*(Цель проекта|Задачи проекта|Актуальность проекта|Перспективы развития проекта)\s*:?.*",
+            "",
+            block,
+        ).strip()
 
         if title in ("Задачи проекта", "Актуальность проекта"):
             summary = block

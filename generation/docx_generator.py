@@ -62,7 +62,12 @@ def generate_docx(section_text: str, semantic: dict) -> dict:
                 text_block = ' '.join(matches)
         if not text_block:
             continue
-
+        # Remove nested headings to avoid duplicated titles
+        text_block = re.sub(
+            r"(?m)^#+\s*(Задачи проекта|Актуальность проекта|Ожидаемый результат)\s*:?.*",
+            "",
+            text_block,
+        ).strip()
         # для Задач и Актуальности возвращаем полный текст блока
         if title in ("Задачи проекта", "Актуальность проекта"):
             summary = text_block
