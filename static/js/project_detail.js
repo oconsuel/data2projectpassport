@@ -281,8 +281,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			showWizardStep("final");
 		}
 	}
-	function submitWizard() {
-		document.getElementById('wizard-modal').classList.remove("show");
+	 	function submitWizard() {
+                document.getElementById('wizard-modal').classList.remove("show");
 		const loader = document.getElementById('poster-loader');
 		const image = document.getElementById('poster-image');
 		const actions = document.getElementById('poster-actions');
@@ -309,7 +309,89 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		})
 		.catch(error => {
-			loader.innerHTML = `<p class="text-danger">Ошибка: ${error.message}</p>`;
-		});
-	}
+                        loader.innerHTML = `<p class="text-danger">Ошибка: ${error.message}</p>`;
+                });
+        }
+
+        // --- Inline edit passport fields ---
+        function toggleEdit(field, editing) {
+                const container = document.getElementById(field + '_container');
+                if (!container) return;
+                const editBtn = container.querySelector('.edit-btn');
+                const saveBtn = container.querySelector('.save-btn');
+                if (editing) {
+                        if (field === 'tags') {
+                                const listDiv = document.getElementById('tags_list');
+                                const tags = Array.from(listDiv.querySelectorAll('.tag')).map(t => t.innerText.trim()).join(', ');
+                                const textarea = document.createElement('textarea');
+                                textarea.className = 'form-control mt-1';
+                                textarea.id = 'tags_editor';
+                                textarea.value = tags;
+                                listDiv.parentNode.insertBefore(textarea, listDiv);
+                                listDiv.remove();
+                        } else {
+                                const span = container.querySelector('span');
+                                const textarea = document.createElement('textarea');
+                                textarea.className = 'form-control mt-1';
+                                textarea.value = span.innerText.trim();
+                                container.insertBefore(textarea, span);
+                                span.remove();
+                        }
+                        editBtn.classList.add('d-none');
+                        saveBtn.classList.remove('d-none');
+                } else {
+                        if (field === 'tags') {
+                                const textarea = document.getElementById('tags_editor');
+                                const tags = textarea.value.split(',').map(t => t.trim()).filter(Boolean);
+                                const div = document.createElement('div');
+                                div.id = 'tags_list';
+                                tags.forEach(tag => {
+                                        const span = document.createElement('span');
+                                        span.className = 'tag';
+                                        span.textContent = tag;
+                                        div.appendChild(span);
+                                });
+                                textarea.parentNode.insertBefore(div, textarea);
+                                textarea.remove();
+                        } else {
+                                const textarea = container.querySelector('textarea');
+                                const span = document.createElement('span');
+                                span.id = field + '_text';
+                                span.textContent = textarea.value.trim();
+                                container.insertBefore(span, textarea);
+                                textarea.remove();
+                        }
+                        editBtn.classList.remove('d-none');
+                        saveBtn.classList.add('d-none');
+                        savePassport();
+                }
+        }
+
+        function savePassport() {
+                const pid = document.getElementById('project-data').dataset.projectId;
+                const summary_short = document.getElementById('summary_short_text').innerText.trim();
+                const goal = document.getElementById('goal_text').innerText.trim();
+                const tasks = document.getElementById('tasks_text').innerText.trim();
+                const relevance = document.getElementById('relevance_text').innerText.trim();
+                const result = document.getElementById('result_text').innerText.trim();
+                const tags = Array.from(document.querySelectorAll('#tags_list .tag')).map(t => t.innerText.trim());
+                const summary_long = [
+                        '### Цель проекта\n' + goal,
+                        '### Задачи проекта\n' + tasks,
+                        '### Актуальность проекта\n' + relevance,
+                        '### Ожидаемый результат\n' + result
+                ].join('\n');
+                fetch(`/projects/${pid}/update_passport`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ summary_short, summary_long, tags })
+                });
+        }
+
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => toggleEdit(btn.dataset.field, true));
+        });
+        document.querySelectorAll('.save-btn').forEach(btn => {
+                btn.addEventListener('click', () => toggleEdit(btn.dataset.field, false));
+        });
 });

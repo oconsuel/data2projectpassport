@@ -77,8 +77,12 @@
 }
 .bi-info-circle {
 	cursor: pointer;
-	margin-left: 5px;
-	color: #007bff;
+    margin-left: 5px;
+    color: #007bff;
+}
+.edit-btn, .save-btn {
+        cursor: pointer;
+        margin-left: 5px;
 }
 .dropzone {
 	border: 2px dashed #007bff;

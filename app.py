@@ -212,3 +212,18 @@ async def poster_dialog(project_id: int, request: Request, db: Session = Depends
     crud.save_poster_path(db, project_id, poster_path)
     return {"poster_path": poster_path}
 
+@app.post("/projects/{project_id}/update_passport")
+async def update_project_passport(project_id: int, request: Request, db: Session = Depends(get_db)):
+    data = await request.json()
+    passport = crud.get_passport(db, project_id)
+    if not passport:
+        return JSONResponse({"error": "Паспорт проекта не найден"}, status_code=404)
+
+    summary_short = data.get("summary_short", passport.summary_short)
+    summary_long = data.get("summary_long", passport.summary_long)
+    tags = data.get("tags")
+    if tags is None:
+        tags = json.loads(passport.tags) if passport.tags else []
+
+    crud.save_passport(db, project_id, summary_short=summary_short, summary_long=summary_long, tags=tags)
+    return {"status": "updated"}

@@ -22,29 +22,48 @@
 		<div class="project-text">
 			<h2>Результаты анализа</h2>
 			{% if passport %}
-				<p>
-					<strong>Краткое описание:</strong>
-					<i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Исходное краткое описание, полученное из анализа документов."></i><br>
-					{{ passport.summary_short }}
-				</p>
+				 <p id="summary_short_container">
+                    <strong>Краткое описание:</strong>
+                    	<i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Исходное краткое описание, полученное из анализа документов."></i>
+                        <i class="bi bi-pencil-square edit-btn ms-2" data-field="summary_short"></i>
+                        <i class="bi bi-check-lg save-btn ms-2 d-none" data-field="summary_short"></i><br>
+                        <span id="summary_short_text">{{ passport.summary_short }}</span>
+            	</p>
 
 				<p>
-					<strong>Подробное описание:</strong>
-					<i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Исходное подробное описание, основанное на извлеченных данных."></i><br>
-				</p>
-				<p>#1 Цель<br>{{ passport.summary_long.split("### Задачи проекта")[0] | trim | replace("\n", "<br/>") | safe }}</p>
-				<p>#2 Задачи<br>{{ passport.summary_long.split("### Актуальность проекта")[0].split("### Задачи проекта")[1] | trim | replace("\n", "<br/>") | safe }}</p>
-				<p>#3 Актуальность<br>{{ passport.summary_long.split("### Ожидаемый результат")[0].split("### Актуальность проекта")[1] | trim | replace("\n", "<br/>") | safe }}</p>
-				<p>#4 Ожидаемый результат<br>{{ passport.summary_long.split("### Ожидаемый результат")[1] | trim | replace("\n", "<br/>") | safe }}</p>
-
-				<p><strong>Теги:</strong>
-					<i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Теги, автоматически сгенерированные на основе содержания документов."></i>
-				</p>
-				<div>
-					{% for tag in tags %}
-						<span class="tag">{{ tag }}</span>
-					{% endfor %}
-				</div>
+                    <strong>Подробное описание:</strong>
+                    <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Исходное подробное описание, основанное на извлеченных данных."></i><br>
+                </p>
+                <p id="goal_container">#1 Цель
+                    <i class="bi bi-pencil-square edit-btn ms-2" data-field="goal"></i>
+                    <i class="bi bi-check-lg save-btn ms-2 d-none" data-field="goal"></i><br>
+                    <span id="goal_text">{{ passport.summary_long.split("### Задачи проекта")[0] | trim | replace("\n", "<br/>") | safe }}</span>
+                </p>
+                <p id="tasks_container">#2 Задачи
+                    <i class="bi bi-pencil-square edit-btn ms-2" data-field="tasks"></i>
+                	<i class="bi bi-check-lg save-btn ms-2 d-none" data-field="tasks"></i><br>
+                    <span id="tasks_text">{{ passport.summary_long.split("### Актуальность проекта")[0].split("### Задачи проекта")[1] | trim | replace("\n", "<br/>") | safe }}</span>
+                </p>
+                <p id="relevance_container">#3 Актуальность
+                    <i class="bi bi-pencil-square edit-btn ms-2" data-field="relevance"></i>
+                    <i class="bi bi-check-lg save-btn ms-2 d-none" data-field="relevance"></i><br>
+                    <span id="relevance_text">{{ passport.summary_long.split("### Ожидаемый результат")[0].split("### Актуальность проекта")[1] | trim | replace("\n", "<br/>") | safe }}</span>
+                </p>
+                <p id="result_container">#4 Ожидаемый результат
+                    <i class="bi bi-pencil-square edit-btn ms-2" data-field="result"></i>
+                    <i class="bi bi-check-lg save-btn ms-2 d-none" data-field="result"></i><br>
+                    <span id="result_text">{{ passport.summary_long.split("### Ожидаемый результат")[1] | trim | replace("\n", "<br/>") | safe }}</span>
+                </p>
+				<p id="tags_container"><strong>Теги:</strong>
+                    <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Теги, автоматически сгенерированные на основе содержания документов."></i>
+                    <i class="bi bi-pencil-square edit-btn ms-2" data-field="tags"></i>
+                    <i class="bi bi-check-lg save-btn ms-2 d-none" data-field="tags"></i>
+                </p>
+                <div id="tags_list">
+                    {% for tag in tags %}
+                        <span class="tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
 
 				<h3>Извлечённые графические файлы:</h3>
 				<ul>
