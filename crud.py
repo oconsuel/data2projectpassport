@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
 from models import Project, ProjectFile, ProjectPassport, ProjectPassportSubfile
 import json
+from datetime import datetime
 
 def create_project(db: Session, name: str):
-    proj = Project(name=name)
+    proj = Project(name=name, created_at=datetime.utcnow())
     db.add(proj)
     db.commit()
     db.refresh(proj)

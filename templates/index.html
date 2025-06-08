@@ -1,19 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>Список проектов</h1>
-  <ul>
-    {% for p in projects %}
-      <li>
-        <a href="/projects/{{ p.id }}">{{ p.name }}</a>
-        — статус: {{ p.status }}
-      </li>
-    {% endfor %}
-  </ul>
+<link rel="stylesheet" href="/static/css/index.css">
 
-  <h2>Создать новый проект</h2>
-  <form method="post">
-    <input type="text" name="name" placeholder="Название проекта" required>
-    <button type="submit">Создать</button>
-  </form>
+<form method="post" class="mb-4 text-center" style="max-width: 500px; margin: 0 auto;">
+    <input type="text" name="name" class="form-control rounded-pill mb-2" placeholder="Название проекта" required>
+    <button type="submit" class="btn btn-primary rounded-pill">Создать</button>
+</form>
+
+<h1 class="mb-4 text-center">Список проектов</h1>
+
+<div class="row g-4">
+
+  {% for p in projects %}
+    <div class="col-12 col-md-4">
+        <div class="card h-100">
+            <div class="ratio ratio-16x9">
+                <img src="{% if p.status == 'done' and p.poster_path %}/{{ p.poster_path }}{% else %}/static/img/placeholder.svg{% endif %}"
+                     class="project-card-img rounded-top" alt="Poster">
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ p.name }}</h5>
+                <p class="card-text">
+                    {% if p.status == 'done' %}
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                    {% else %}
+                        <i class="bi bi-hourglass-split text-secondary"></i>
+                    {% endif %}
+                    {{ p.status }}
+                </p>
+                <p class="card-text"><small class="text-muted">{{ p.created_at.strftime('%d.%m.%Y') }}</small></p>
+                <a href="/projects/{{ p.id }}" class="stretched-link"></a>
+            </div>
+        </div>
+    </div>
+  {% endfor %}
+</div>
 {% endblock %}

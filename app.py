@@ -50,8 +50,14 @@ async def generate_poster_async(project_id: int, summary: str, tags: list[str], 
 
 @app.get("/", response_class=HTMLResponse)
 def project_list(request: Request, db: Session = Depends(get_db)):
-    projects = db.query(models.Project).all()
-    return templates.TemplateResponse("index.html", {"request": request, "projects": projects})
+    projects = (
+        db.query(models.Project)
+        .order_by(models.Project.id.desc())
+        .all()
+    )
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "projects": projects}
+    )
 
 @app.post("/", response_class=HTMLResponse)
 def create_project(request: Request, name: str = Form(...), db: Session = Depends(get_db)):

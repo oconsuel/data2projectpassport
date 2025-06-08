@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from database import Base
 import json
+from datetime import datetime
 
 class Project(Base):
     __tablename__ = "projects"
@@ -9,6 +10,7 @@ class Project(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     status = Column(String, default="created")
+    created_at = Column(DateTime, default=datetime.utcnow)
     recommendations = Column(String)
     poster_path = Column(String)  # Путь к постеру
 
